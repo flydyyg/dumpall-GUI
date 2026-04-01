@@ -21,6 +21,8 @@ LANGUAGES = {
         "force_download": "Force Download",
         "debug_mode": "Debug Mode",
         "start_dumpall": "Start Dumpall",
+        "subtitle": "A cleaner desktop client for fast source discovery.",
+        "advanced_options": "Advanced Options",
         "logs": "Logs:",
         "url_empty_error": "Error: Target URL cannot be empty!\n",
         "starting_process": "Starting Dumpall process...\n",
@@ -40,6 +42,8 @@ LANGUAGES = {
         "force_download": "强制下载",
         "debug_mode": "调试模式",
         "start_dumpall": "开始下载",
+        "subtitle": "更清爽的桌面客户端，更快开始站点文件探测。",
+        "advanced_options": "高级选项",
         "logs": "日志:",
         "url_empty_error": "错误: 目标URL不能为空!\n",
         "starting_process": "开始Dumpall进程...\n",
@@ -67,6 +71,11 @@ class DumpallGUI:
         self.master = master
         self.set_language()
         master.title(LANGUAGES[self.current_language]["title"])
+        master.configure(bg="#eef3f8")
+        master.geometry("980x680")
+        master.minsize(860, 620)
+
+        self.setup_style()
 
         self.create_widgets()
         self.update_ui_language()
@@ -87,50 +96,173 @@ class DumpallGUI:
         except Exception:
             self.current_language = "en"  # Default to English on error
 
+    def setup_style(self):
+        self.colors = {
+            "app_bg": "#eef3f8",
+            "surface": "#ffffff",
+            "surface_alt": "#f7f9fc",
+            "text": "#243447",
+            "muted": "#6b7a90",
+            "border": "#d7e0ea",
+            "primary": "#42b883",
+            "primary_hover": "#32976b",
+            "accent": "#35495e",
+            "log_bg": "#0f1722",
+            "log_fg": "#d7e3f1"
+        }
+
+        self.style = ttk.Style()
+        if "clam" in self.style.theme_names():
+            self.style.theme_use("clam")
+
+        self.style.configure("App.TFrame", background=self.colors["app_bg"])
+        self.style.configure("Card.TFrame", background=self.colors["surface"], relief="flat")
+        self.style.configure("Section.TLabelframe", background=self.colors["surface"], borderwidth=0)
+        self.style.configure(
+            "Section.TLabelframe.Label",
+            background=self.colors["surface"],
+            foreground=self.colors["accent"],
+            font=("Segoe UI Semibold", 11)
+        )
+        self.style.configure(
+            "Title.TLabel",
+            background=self.colors["app_bg"],
+            foreground=self.colors["accent"],
+            font=("Segoe UI Semibold", 24)
+        )
+        self.style.configure(
+            "Subtitle.TLabel",
+            background=self.colors["app_bg"],
+            foreground=self.colors["muted"],
+            font=("Segoe UI", 10)
+        )
+        self.style.configure(
+            "FieldLabel.TLabel",
+            background=self.colors["surface"],
+            foreground=self.colors["text"],
+            font=("Segoe UI Semibold", 10)
+        )
+        self.style.configure(
+            "Primary.TButton",
+            background=self.colors["primary"],
+            foreground="#ffffff",
+            borderwidth=0,
+            focusthickness=0,
+            focuscolor=self.colors["primary"],
+            font=("Segoe UI Semibold", 10),
+            padding=(18, 12)
+        )
+        self.style.map(
+            "Primary.TButton",
+            background=[("active", self.colors["primary_hover"]), ("pressed", self.colors["primary_hover"])]
+        )
+        self.style.configure(
+            "Secondary.TButton",
+            background=self.colors["surface_alt"],
+            foreground=self.colors["accent"],
+            bordercolor=self.colors["border"],
+            lightcolor=self.colors["surface_alt"],
+            darkcolor=self.colors["surface_alt"],
+            font=("Segoe UI", 10),
+            padding=(14, 10)
+        )
+        self.style.map(
+            "Secondary.TButton",
+            background=[("active", "#edf3f8")]
+        )
+        self.style.configure(
+            "Switch.TCheckbutton",
+            background=self.colors["surface"],
+            foreground=self.colors["text"],
+            font=("Segoe UI", 10)
+        )
+
     def create_widgets(self):
-        self.main_frame = ttk.Frame(self.master, padding="10")
+        self.main_frame = ttk.Frame(self.master, padding=24, style="App.TFrame")
         self.main_frame.grid(row=0, column=0, sticky="nsew")
 
-        # Language Selection (removed, now automatic)
+        self.header_title = ttk.Label(self.main_frame, style="Title.TLabel")
+        self.header_title.grid(row=0, column=0, sticky="w")
+        self.header_subtitle = ttk.Label(self.main_frame, style="Subtitle.TLabel")
+        self.header_subtitle.grid(row=1, column=0, sticky="w", pady=(6, 22))
 
-        # URL
-        ttk.Label(self.main_frame, text=LANGUAGES[self.current_language]["target_url"]).grid(row=0, column=0, sticky="w", pady=5)
-        self.url_entry = ttk.Entry(self.main_frame, width=60)
-        self.url_entry.grid(row=0, column=1, columnspan=2, sticky="ew", pady=5)
+        self.content_frame = ttk.Frame(self.main_frame, style="App.TFrame")
+        self.content_frame.grid(row=2, column=0, sticky="nsew")
 
-        # Output Directory
-        ttk.Label(self.main_frame, text=LANGUAGES[self.current_language]["output_directory"]).grid(row=1, column=0, sticky="w", pady=5)
-        self.outdir_entry = ttk.Entry(self.main_frame, width=60)
-        self.outdir_entry.grid(row=1, column=1, sticky="ew", pady=5)
-        self.outdir_button = ttk.Button(self.main_frame, text=LANGUAGES[self.current_language]["browse"], command=self.browse_outdir)
-        self.outdir_button.grid(row=1, column=2, sticky="w", padx=5, pady=5)
+        self.form_card = ttk.Frame(self.content_frame, padding=24, style="Card.TFrame")
+        self.form_card.grid(row=0, column=0, sticky="nsew", padx=(0, 18))
 
-        # Proxy
-        ttk.Label(self.main_frame, text=LANGUAGES[self.current_language]["proxy"]).grid(row=2, column=0, sticky="w", pady=5)
-        self.proxy_entry = ttk.Entry(self.main_frame, width=60)
-        self.proxy_entry.grid(row=2, column=1, columnspan=2, sticky="ew", pady=5)
+        self.log_card = ttk.Frame(self.content_frame, padding=20, style="Card.TFrame")
+        self.log_card.grid(row=0, column=1, sticky="nsew")
 
-        # Checkboxes
+        self.url_label = ttk.Label(self.form_card, style="FieldLabel.TLabel")
+        self.url_label.grid(row=0, column=0, sticky="w", pady=(0, 8))
+        self.url_entry = ttk.Entry(self.form_card, width=60, font=("Segoe UI", 11))
+        self.url_entry.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(0, 16), ipady=7)
+
+        self.outdir_label = ttk.Label(self.form_card, style="FieldLabel.TLabel")
+        self.outdir_label.grid(row=2, column=0, sticky="w", pady=(0, 8))
+        self.outdir_entry = ttk.Entry(self.form_card, width=60, font=("Segoe UI", 11))
+        self.outdir_entry.grid(row=3, column=0, sticky="ew", pady=(0, 16), ipady=7)
+        self.outdir_button = ttk.Button(
+            self.form_card,
+            command=self.browse_outdir,
+            style="Secondary.TButton"
+        )
+        self.outdir_button.grid(row=3, column=1, sticky="ew", padx=(12, 0), pady=(0, 16))
+
+        self.proxy_label = ttk.Label(self.form_card, style="FieldLabel.TLabel")
+        self.proxy_label.grid(row=4, column=0, sticky="w", pady=(0, 8))
+        self.proxy_entry = ttk.Entry(self.form_card, width=60, font=("Segoe UI", 11))
+        self.proxy_entry.grid(row=5, column=0, columnspan=2, sticky="ew", pady=(0, 18), ipady=7)
+
+        self.options_frame = ttk.LabelFrame(self.form_card, padding=16, style="Section.TLabelframe")
+        self.options_frame.grid(row=6, column=0, columnspan=2, sticky="ew", pady=(0, 18))
+
         self.force_var = tk.BooleanVar()
-        self.force_check = ttk.Checkbutton(self.main_frame, text=LANGUAGES[self.current_language]["force_download"], var=self.force_var)
-        self.force_check.grid(row=3, column=0, sticky="w", pady=5)
+        self.force_check = ttk.Checkbutton(self.options_frame, variable=self.force_var, style="Switch.TCheckbutton")
+        self.force_check.grid(row=0, column=0, sticky="w", padx=(0, 24))
 
         self.debug_var = tk.BooleanVar()
-        self.debug_check = ttk.Checkbutton(self.main_frame, text=LANGUAGES[self.current_language]["debug_mode"], var=self.debug_var)
-        self.debug_check.grid(row=3, column=1, sticky="w", pady=5)
+        self.debug_check = ttk.Checkbutton(self.options_frame, variable=self.debug_var, style="Switch.TCheckbutton")
+        self.debug_check.grid(row=0, column=1, sticky="w")
 
-        # Start Button
-        self.start_button = ttk.Button(self.main_frame, text=LANGUAGES[self.current_language]["start_dumpall"], command=self.start_dumpall_thread)
-        self.start_button.grid(row=4, column=0, columnspan=3, pady=15)
+        self.start_button = ttk.Button(
+            self.form_card,
+            command=self.start_dumpall_thread,
+            style="Primary.TButton"
+        )
+        self.start_button.grid(row=7, column=0, columnspan=2, sticky="ew")
 
-        # Log Area
-        ttk.Label(self.main_frame, text=LANGUAGES[self.current_language]["logs"]).grid(row=5, column=0, sticky="w", pady=5)
-        self.log_text = scrolledtext.ScrolledText(self.main_frame, width=80, height=20, state='disabled', wrap=tk.WORD)
-        self.log_text.grid(row=6, column=0, columnspan=3, sticky="nsew", pady=5)
+        self.log_label = ttk.Label(self.log_card, style="FieldLabel.TLabel")
+        self.log_label.grid(row=0, column=0, sticky="w", pady=(0, 10))
+        self.log_text = scrolledtext.ScrolledText(
+            self.log_card,
+            width=80,
+            height=20,
+            state='disabled',
+            wrap=tk.WORD,
+            relief="flat",
+            borderwidth=0,
+            bg=self.colors["log_bg"],
+            fg=self.colors["log_fg"],
+            insertbackground="#ffffff",
+            font=("Consolas", 10),
+            padx=16,
+            pady=16
+        )
+        self.log_text.grid(row=1, column=0, sticky="nsew")
 
-        # Configure grid to expand
-        self.main_frame.grid_rowconfigure(6, weight=1)
-        self.main_frame.grid_columnconfigure(1, weight=1)
+        self.form_card.grid_columnconfigure(0, weight=1)
+        self.options_frame.grid_columnconfigure(0, weight=1)
+        self.options_frame.grid_columnconfigure(1, weight=1)
+        self.log_card.grid_rowconfigure(1, weight=1)
+        self.log_card.grid_columnconfigure(0, weight=1)
+        self.content_frame.grid_columnconfigure(0, weight=3)
+        self.content_frame.grid_columnconfigure(1, weight=4)
+        self.content_frame.grid_rowconfigure(0, weight=1)
+        self.main_frame.grid_rowconfigure(2, weight=1)
+        self.main_frame.grid_columnconfigure(0, weight=1)
         self.master.grid_rowconfigure(0, weight=1)
         self.master.grid_columnconfigure(0, weight=1)
 
@@ -138,17 +270,16 @@ class DumpallGUI:
         lang = LANGUAGES[self.current_language]
 
         self.master.title(lang["title"])
-        # Update labels
-        self.main_frame.children["!label"].config(text=lang["target_url"])
-        self.main_frame.children["!label2"].config(text=lang["output_directory"])
-        self.main_frame.children["!label3"].config(text=lang["proxy"])
-        self.main_frame.children["!label4"].config(text=lang["logs"])
-        
-        # Update buttons
+        self.header_title.config(text=lang["title"])
+        self.header_subtitle.config(text=lang["subtitle"])
+        self.url_label.config(text=lang["target_url"])
+        self.outdir_label.config(text=lang["output_directory"])
+        self.proxy_label.config(text=lang["proxy"])
+        self.log_label.config(text=lang["logs"])
+        self.options_frame.config(text=lang["advanced_options"])
+
         self.outdir_button.config(text=lang["browse"])
         self.start_button.config(text=lang["start_dumpall"])
-
-        # Update checkboxes
         self.force_check.config(text=lang["force_download"])
         self.debug_check.config(text=lang["debug_mode"])
 
